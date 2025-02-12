@@ -27,16 +27,20 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 
-  document.querySelector('#transaction-form').addEventListener('submit', function(event) {
+  document.querySelector('#transaction-form').addEventListener('submit', async function(event) {
     event.preventDefault();
-    add_transaction();
-  });
-  
+
+    try {
+        await add_transaction();  // Wait for transaction to complete
+        await load_item();  // Fetch updated item list
+        await load_transaction();  // Fetch updated transaction list
+    } catch (error) {
+        console.error("Error handling transaction:", error);
+    }
 });
 
-
-
-
+  
+});
 
 
 function add_category() {
@@ -53,6 +57,11 @@ function add_category() {
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+
+
+  document.querySelector('#p').style.display = 'none';
 
 
 
@@ -110,6 +119,12 @@ function add_item() {
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+
+  document.querySelector('#p').style.display = 'none';
+
+
 
 
 
@@ -130,9 +145,19 @@ function add_item() {
     body: JSON.stringify({ name: name, category: category , supplier:supplier , quantity:quantity , price_per_unit:price_per_unit })
   })
   
-  .then(response => {
+  .then(async response => {
     if (response.ok) {
-      return response.json();
+      const newItem = await response.json();
+      console.log("Item added:", newItem);
+
+      // Update the dropdown without refreshing
+      updateTransactionDropdown(newItem);
+
+      // Clear form fields
+      document.querySelector('#item-form').reset();
+
+      // Refresh item list
+      await load_item();
     } else {
       throw new Error('Failed to add supplier');
     }
@@ -163,6 +188,11 @@ function add_transaction() {
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+
 
 
 
@@ -170,13 +200,6 @@ function add_transaction() {
   const type = document.querySelector('#transaction-type').value;
   const qty = document.querySelector('#transaction-quantity').value;
   const notes = document.querySelector('#transaction-notes').value;
-
-  
-  console.log(item)
-  console.log(type)
-  console.log(qty)
-  console.log(notes)
-  
 
   fetch('/api/inventory-transactions/', {
     method: 'POST',
@@ -196,13 +219,24 @@ function add_transaction() {
   .then(data => {
     document.querySelector('#transaction-form').reset();
     console.log("load_siplicer")
-    // load_supplier();
+    load_transaction();
   })
   .catch(error => console.error('Error:', error));
   
 
 }
 
+function updateTransactionDropdown(item) {
+  const transactionDropdown = document.querySelector('#transaction-item');
+
+  // Create a new option for the dropdown
+  const newOption = document.createElement('option');
+  newOption.value = item.id;
+  newOption.textContent = item.name;
+
+  // Append the new option to the dropdown
+  transactionDropdown.appendChild(newOption);
+}
 
 
 
@@ -220,6 +254,12 @@ function add_supplier() {
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+
+
 
   const name =  document.querySelector('#supplier-name').value ; 
   const contact_name =  document.querySelector('#supplier-contact-name').value ;
@@ -263,6 +303,10 @@ function load_categories() {
   document.querySelector('#transaction-add').style.display = 'none';
   document.querySelector('#category-list').style.display = 'block';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+  document.querySelector('#update-form-item').style.display = 'none';
 
 
 
@@ -357,6 +401,11 @@ function load_supplier() {
   document.querySelector('#transaction-add').style.display = 'none';
   document.querySelector('#category-list').style.display = 'block';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+
 
 
   // Fetch categories from the API
@@ -440,6 +489,10 @@ function load_item() {
   document.querySelector('#transaction-add').style.display = 'none';
   document.querySelector('#category-list').style.display = 'block';
   document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
 
 
 
@@ -464,7 +517,7 @@ function load_item() {
   
       const itemName = document.createElement('h2');
       itemName.classList.add('item-name');
-      itemName.textContent = `Item Name: ${item.name}`;
+      itemName.textContent = `Item Name  ${item.name}`;
   
       const categoryName = document.createElement('h4');
       categoryName.classList.add('category-description');
@@ -484,6 +537,41 @@ function load_item() {
       price_per_unit.classList.add('category-description');
       price_per_unit.textContent = ` price : ${item.price_per_unit}`;
   
+
+      // Create Update Button
+      const updateButton = document.createElement('button');
+      updateButton.classList.add('update-btn');
+      updateButton.textContent = 'Update';
+      updateButton.onclick = function() {
+        openUpdateFormItem(item); // Call a function to open the update form
+      };
+
+      // Create Delete Button
+
+      const deleteButton = document.createElement('button');
+      deleteButton.classList.add('delete-btn');
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = function() {
+        fetch(`http://127.0.0.1:8000/api/items/${item.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+    
+          },
+        }) .then(response => {
+          if (response.ok) {
+            // If the response is OK, reload categories
+            load_item();
+          } else {
+            // Handle error response if needed
+            console.error('Failed to delete category');
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting category:', error);
+        });
+      };
   
   
       // Append the name and description to the category item
@@ -492,6 +580,8 @@ function load_item() {
       categoryItem.appendChild(supplierName);
       categoryItem.appendChild(quantity);
       categoryItem.appendChild(price_per_unit);
+      categoryItem.appendChild(updateButton);
+      categoryItem.appendChild(deleteButton);
 
 
   
@@ -513,8 +603,9 @@ function load_transaction() {
   document.querySelector('#transaction-add').style.display = 'none';
   document.querySelector('#category-list').style.display = 'block';
   document.querySelector('#update-form-container').style.display = 'none';
-
-
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
 
 
 
@@ -540,9 +631,7 @@ function load_transaction() {
       categoryName.classList.add('category-name');
       categoryName.textContent = `Tranaction: ${transaction.item_name}`;
   
-      const categoryDescription = document.createElement('p');
-      categoryDescription.classList.add('category-description');
-      categoryDescription.textContent = `Status: ${transaction.transaction_type}` || 'No description available';
+      
 
       const categoryType = document.createElement('p');
       categoryType.classList.add('category-description');
@@ -550,7 +639,7 @@ function load_transaction() {
 
       const categoryQty = document.createElement('p');
       categoryQty.classList.add('category-description');
-      categoryQty.textContent = `Status: ${transaction.quantity}` || 'No description available';
+      categoryQty.textContent = `Qty: ${transaction.quantity}` || 'No description available';
 
       const categoryDate = document.createElement('p');
       categoryDate.classList.add('category-description');
@@ -560,15 +649,51 @@ function load_transaction() {
       categoryNote.classList.add('category-description');
       categoryNote.textContent = `Note: ${transaction.notes}` || 'No description available';
 
+       // Create Update Button
+       const updateButton = document.createElement('button');
+       updateButton.classList.add('update-btn');
+       updateButton.textContent = 'Update';
+       updateButton.onclick = function() {
+        openUpdateTransaction(transaction)
+         console.log(`Update category: ${transaction.id}`);
+         // You can trigger an update form, modal, or redirect to an update page.
+       };
+
+       const deleteButton = document.createElement('button');
+      deleteButton.classList.add('delete-btn');
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = function() {
+        fetch(`http://127.0.0.1:8000/api/inventory-transactions/${transaction.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+    
+          },
+        }) .then(response => {
+          if (response.ok) {
+            // If the response is OK, reload categories
+            load_transaction();
+          } else {
+            // Handle error response if needed
+            console.error('Failed to delete category');
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting category:', error);
+        });
+      };
+
 
      
   
       // Append the name and description to the category item
       categoryItem.appendChild(categoryName);
-      categoryItem.appendChild(categoryDescription);
       categoryItem.appendChild(categoryQty);
       categoryItem.appendChild(categoryDate);
       categoryItem.appendChild(categoryNote);
+      categoryItem.appendChild(updateButton);
+      categoryItem.appendChild(deleteButton);
   
       // Add the category item to the category view
       categoryView.appendChild(categoryItem);
@@ -608,6 +733,12 @@ function openUpdateForm(category) {
   document.querySelector('#category-view').style.display = 'none';
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+  document.querySelector('#update-form-item').style.display = 'none';
+
+
 
   
   // Fill the form with the category's data
@@ -655,6 +786,10 @@ function openUpdateForm(category) {
 function closeUpdateForm() {
   document.querySelector('#update-form-container').style.display = 'none';
   document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+
 
 
   // Reset all form fields to empty
@@ -665,6 +800,11 @@ function closeUpdateForm() {
   document.getElementById('supplier-phone-update').value= '';
   document.getElementById('supplier-email-update').value= '';
   document.getElementById('supplier-address-update').value= '';
+  document.getElementById('item-name-update').value = '';
+  document.getElementById('item-category-update').value = '';
+  document.getElementById('item-supplier-update').value = '';
+  document.getElementById('item-quantity-update').value = '' ;
+  document.getElementById('item-price_per_unit-update').value = '';
 }
 
 
@@ -672,6 +812,8 @@ function closeUpdateForm() {
 
 function openUpdateFormSupplier(category) {
   // Show the update form
+  document.querySelector('#update-form-item').style.display = 'none';
+
   document.querySelector('#update-form-supplier').style.display = 'block';
   document.querySelector('#update-form-container').style.display = 'none';
   document.querySelector('#category-list').style.display = 'none';
@@ -679,6 +821,8 @@ function openUpdateFormSupplier(category) {
   document.querySelector('#category-view').style.display = 'none';
   document.querySelector('#item-view').style.display = 'none';
   document.querySelector('#supplier-view').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
 
   
   // Fill the form with the category's data
@@ -722,3 +866,114 @@ function openUpdateFormSupplier(category) {
     });
   };
 }
+
+
+function openUpdateFormItem(category) {
+  // Show the update form
+  document.querySelector('#update-form-item').style.display = 'block';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#category-list').style.display = 'none';
+  document.querySelector('#transaction-view').style.display = 'none';
+  document.querySelector('#category-view').style.display = 'none';
+  document.querySelector('#item-view').style.display = 'none';
+  document.querySelector('#supplier-view').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+  document.querySelector('#p').style.display = 'none';
+
+
+
+  
+
+  // Handle form submission
+  const form = document.querySelector('#transaction-form-update');
+  form.onsubmit = function(event) {
+    event.preventDefault();
+    
+    // Prepare the data to be updated
+    const supplierData = {
+      name: document.getElementById('item-name-update').value,
+      category: document.getElementById('item-category-update').value,
+      supplier: document.getElementById('item-supplier-update').value,
+      quantity: document.getElementById('item-quantity-update').value,
+      price_per_unit: document.getElementById('item-price_per_unit-update').value
+  };
+
+    console.log(supplierData)
+
+    // Send the PUT request to update the category
+    fetch(`http://127.0.0.1:8000/api/items/${category.id}/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+
+      },
+      body: JSON.stringify(supplierData),
+    })
+    .then(response => response.json())
+    .then(updatedCategory => {
+      console.log('Category updated:', updatedCategory);
+      closeUpdateForm();  
+      load_item();  
+    })
+    .catch(error => {
+      console.error('Error updating category:', error);
+    });
+  };
+}
+
+
+function openUpdateTransaction(category) {
+  // Show the update form
+  document.querySelector('#p').style.display = 'block';
+  document.querySelector('#update-form-item').style.display = 'none';
+  document.querySelector('#update-form-supplier').style.display = 'none';
+  document.querySelector('#update-form-container').style.display = 'none';
+  document.querySelector('#category-list').style.display = 'none';
+  document.querySelector('#transaction-view').style.display = 'none';
+  document.querySelector('#category-view').style.display = 'none';
+  document.querySelector('#item-view').style.display = 'none';
+  document.querySelector('#supplier-view').style.display = 'none';
+
+  
+
+  // Handle form submission
+  const form = document.querySelector('#transaction-form-update');
+  form.onsubmit = function(event) {
+    event.preventDefault();
+    
+    // Prepare the data to be updated
+    const supplierData = {
+      item: document.getElementById('transaction-item-update').value,
+      transaction_type: document.getElementById('transaction-type-update').value,
+      quantity: document.getElementById('transaction-quantity-update').value,
+      notes: document.getElementById('transaction-notes-update').value,
+  };
+
+    console.log(supplierData)
+
+    // Send the PUT request to update the category
+    fetch(`http://127.0.0.1:8000/api/inventory-transactions/${category.id}/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken(),
+
+      },
+      body: JSON.stringify(supplierData),
+    })
+    .then(response => response.json())
+    .then(updatedCategory => {
+      console.log('Category updated:', updatedCategory);
+      closeUpdateForm();  
+      load_transaction();  
+    })
+    .catch(error => {
+      console.error('Error updating category:', error);
+    });
+  };
+}
+
+
+

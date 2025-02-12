@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import pymysql
+pymysql.install_as_MySQLdb()
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,12 +80,31 @@ WSGI_APPLICATION = 'project3.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',  # MySQL database backend
+        'NAME': 'inventory',  # Your MySQL database name
+        'USER': 'root',  # MySQL username (default is 'root')
+        'PASSWORD': 'heng',  # Your MySQL root password
+        'HOST': 'localhost',  # Database host
+        'PORT': '3306',  # Default MySQL port
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
+
 
 AUTH_USER_MODEL = 'mail.User'
 

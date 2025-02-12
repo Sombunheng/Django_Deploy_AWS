@@ -6,6 +6,9 @@ from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from inventory.serializers import CategorySerializer, SupplierSerializer, ItemSerializer, InventoryTransactionSerializer
+from inventory.models import Category, Supplier, Item, InventoryTransaction
+
 
 from .models import User, Email
 
@@ -14,7 +17,18 @@ def index(request):
 
     # Authenticated users view their inbox
     if request.user.is_authenticated:
-        return render(request, "inventory/dashboard.html")
+
+        categories = Category.objects.all()
+        suppliers = Supplier.objects.all()
+        items = Item.objects.all()
+        
+        context = {
+            'categories': categories,
+            'suppliers': suppliers,
+            'items': items
+        }
+        return render(request, 'inventory/dashboard.html', context)
+
 
     # Everyone else is prompted to sign in
     else:

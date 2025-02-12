@@ -204,6 +204,77 @@
         </form>
     </div>
 
+    <div id="update-form-item" style="display:none;">
+        <h3>Update Supplier</h3>
+        <form id="update-item-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="supplier-name">Name:</label>
+                <input type="text" id="item-name-update" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="item-category">Category:</label>
+                <select id="item-category-update" name="category" class="form-control">
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="item-supplier">Supplier:</label>
+                <select id="item-supplier-update" name="supplier" class="form-control">
+                    <option value="">None</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="supplier-email">Quantity:</label>
+                <input type="number" id="item-quantity-update" name="quantity" class="form-control" min="0">
+
+            </div>
+            <div class="form-group">
+                <label for="supplier-address">Price per unit:</label>
+                <input type="text" id="item-price_per_unit-update" name="price_per_unit" class="form-control">
+            </div>
+
+            <button type="submit">Update Item</button>
+            <button type="button" onclick="closeUpdateForm()">Cancel</button>
+        </form>
+    </div>
+
+    <div id="p" style="display: none;">
+        <h3>Update Inventory Transaction</h3>
+        <form id="transaction-form-update" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="transaction-item">Item:</label>
+                <select id="transaction-item-update" name="item" class="form-control">
+                    {% for item in items %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-type">Transaction Type:</label>
+                <select id="transaction-type-update" name="transaction_type" class="form-control">
+                    <option value="IN">Stock In</option>
+                    <option value="OUT">Stock Out</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="transaction-quantity">Quantity:</label>
+                <input type="number" id="transaction-quantity-update" name="quantity" class="form-control" min="1">
+            </div>
+            <div class="form-group">
+                <label for="transaction-notes">Notes:</label>
+                <textarea id="transaction-notes-update" name="notes" class="form-control"></textarea>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Submit Transaction">
+        </form>
+    </div>
 
 {% endblock %}
 
